@@ -194,12 +194,28 @@
         .dropdown-menu button:hover {
             background: #f0f0f0;
         }
+
+        #new-chat-button {
+            background: var(--button-bg);
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 10px;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        #new-chat-button:hover {
+            background: var(--button-hover-bg);
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="chats-panel">
             <h2>Chats</h2>
+            <button id="new-chat-button">New Chat</button>
             <div id="chats-list"></div>
         </div>
         <div class="chat-container">
@@ -239,13 +255,25 @@
         const dropdownMenu = document.getElementById('dropdown-menu');
         const themeToggler = document.getElementById('theme-toggler');
         const rootElement = document.documentElement;
+        const newChatButton = document.getElementById('new-chat-button');
 
         let chatHistory = JSON.parse(getCookie('chatHistory') || '[]');
         let currentChatIndex = chatHistory.length;
 
+        const jokes = [
+            "Why don’t skeletons fight each other? They don’t have the guts.",
+            "I told my wife she was drawing her eyebrows too high. She looked surprised.",
+            "Why don’t programmers like nature? It has too many bugs.",
+            "Parallel lines have so much in common. It’s a shame they’ll never meet.",
+					  "How do trees get on the Internet? They Log in.",
+			      "What do computers like to eat? Chips!",
+					  "What do you call a space magician? A flying saucerer!"
+        ];
+
         const responses = {
             hello: "Hi there! How can I assist you?",
             help: "Sure, let me know what you need help with.",
+            joke: () => jokes[Math.floor(Math.random() * jokes.length)],
             bye: "Goodbye! Have a great day!",
             default: "I'm sorry, I didn't understand that. Can you rephrase?"
         };
@@ -259,39 +287,28 @@
                 chatItem.className = 'chat-history';
                 chatItem.textContent = chat.name || `Chat ${index + 1}`;
                 chatItem.addEventListener('click', () => loadChat(index));
+
                 const actions = document.createElement('div');
                 actions.className = 'actions';
+
                 const renameButton = document.createElement('button');
                 renameButton.textContent = '✏️';
                 renameButton.addEventListener('click', (e) => {
                     e.stopPropagation();
                     renameChat(index);
                 });
+
                 const deleteButton = document.createElement('button');
-                deleteButton.textContent = '❌';
+                deleteButton.textContent = '🗑️';
                 deleteButton.addEventListener('click', (e) => {
                     e.stopPropagation();
                     deleteChat(index);
                 });
-                actions.appendChild(renameButton);
-                actions.appendChild(deleteButton);
+
+                actions.append(renameButton, deleteButton);
                 chatItem.appendChild(actions);
                 chatsList.appendChild(chatItem);
             });
-        };
-
-        const saveChat = () => {
-            const messages = Array.from(chatBox.children).map((msg) => ({
-                text: msg.textContent,
-                sender: msg.className.includes('bot') ? 'bot' : 'user',
-            }));
-            if (currentChatIndex >= chatHistory.length) {
-                chatHistory.push({ name: '', messages });
-            } else {
-                chatHistory[currentChatIndex].messages = messages;
-            }
-            saveChats();
-            loadChatsList();
         };
 
         const loadChat = (index) => {
@@ -332,9 +349,23 @@
         const handleInput = () => {
             const userText = userInput.value.trim();
             if (!userText) return;
+
             createMessage(userText, 'user');
             userInput.value = '';
-            const botResponse = responses[userText.toLowerCase()] || responses.default;
+
+            const lowerText = userText.toLowerCase();
+            let botResponse = responses.default;
+
+            if (lowerText.includes('hello') || lowerText.includes('hi') || lowerText.includes('hey')) {
+                botResponse = responses.hello;
+            } else if (lowerText.includes('help')) {
+                botResponse = responses.help;
+            } else if (lowerText.includes('joke')) {
+                botResponse = responses.joke();
+            } else if (lowerText.includes('bye')) {
+                botResponse = responses.bye;
+            }
+
             setTimeout(() => createMessage(botResponse, 'bot'), 500);
         };
 
@@ -353,13 +384,24 @@
             dropdownMenu.style.display = dropdownMenu.style.display === 'block' ? 'none' : 'block';
         });
 
+        newChatButton.addEventListener('click', () => {
+            const newChat = {
+                name: `Chat ${chatHistory.length + 1}`,
+                messages: []
+            };
+            chatHistory.push(newChat);
+            currentChatIndex = chatHistory.length - 1;
+            saveChats();
+            loadChatsList();
+            loadChat(currentChatIndex);
+        });
+
         const init = () => {
             const savedTheme = getCookie('theme');
             if (savedTheme === 'dark') rootElement.classList.add('dark-theme');
             loadChatsList();
         };
 
-        setInterval(saveChat, 3000);
         init();
     </script>
 </body>
