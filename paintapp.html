@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Paint App</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    text-align: center;
+  }
+  #paintCanvas {
+    border: 1px solid #ccc;
+    max-width: 100%;
+    max-height: 80vh; 
+    overflow: auto; 
+  }
+  .colors {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+  }
+  .color {
+    width: 20px;
+    height: 20px;
+    margin: 0 5px;
+    cursor: pointer;
+    border-radius: 50%;
+    border: 1px solid #ccc;
+  }
+  button {
+    padding: 0.5rem 1rem;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+  button:hover {
+    background-color: #0056b3;
+  }
+  input[type="range"] {
+    width: 80%;
+    max-width: 600px;
+    margin-top: 10px;
+  }
+</style>
+</head>
+<body>
+  <canvas id="paintCanvas" width="800" height="600"></canvas>
+  <div class="colors">
+    <div class="color" style="background-color: black;"></div>
+    <div class="color" style="background-color: red;"></div>
+    <div class="color" style="background-color: green;"></div>
+    <div class="color" style="background-color: blue;"></div>
+    <div class="color" style="background-color: yellow;"></div>
+  </div>
+  <button id="eraser">Eraser</button>
+  <input type="range" id="penSize" min="1" max="20" value="5">
+  <script>
+    const canvas = document.getElementById('paintCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let painting = false;
+    let color = 'black';
+    let penSize = 5;
+    let canvasBackgroundColor = '#ffffff'; // Default to white
+
+    function getCanvasBackgroundColor() {
+      const computedStyle = getComputedStyle(canvas);
+      canvasBackgroundColor = computedStyle.backgroundColor;
+    }
+
+    function startPosition(e) {
+      painting = true;
+      draw(e);
+    }
+
+    function endPosition() {
+      painting = false;
+      ctx.beginPath();
+    }
+
+    function draw(e) {
+      if (!painting) return;
+
+      ctx.lineWidth = penSize;
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = color;
+
+      // Adjust the position based on the center of the pen size relative to the canvas
+      const rect = canvas.getBoundingClientRect();
+      const offsetX = Math.floor(penSize / 2);
+      const offsetY = Math.floor(penSize / 2);
+
+      ctx.lineTo(
+        e.clientX - rect.left - offsetX,
+        e.clientY - rect.top - offsetY
+      );
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(
+        e.clientX - rect.left - offsetX,
+        e.clientY - rect.top - offsetY
+      );
+    }
+
+    canvas.addEventListener('mousedown', startPosition);
+    canvas.addEventListener('mouseup', endPosition);
+    canvas.addEventListener('mousemove', draw);
+
+    document.querySelectorAll('.color').forEach(function(colorElement) {
+      colorElement.addEventListener('click', function() {
+        color = colorElement.style.backgroundColor;
+      });
+    });
+
+    document.getElementById('eraser').addEventListener('click', function() {
+      color = canvasBackgroundColor; // Set the color to canvas background color
+    });
+
+    document.getElementById('penSize').addEventListener('input', function() {
+      penSize = this.value;
+    });
+
+    getCanvasBackgroundColor(); // Get the canvas background color
+  </script>
+</body>
+</html>
