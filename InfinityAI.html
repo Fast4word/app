@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infinity Chatbot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+
+        :root {
+            --background-color: #f4f4f9;
+            --text-color: #000;
+            --chat-bg: #fff;
+            --bot-bg: #e6f7ff;
+            --user-bg: #cce5ff;
+            --button-bg: #007bff;
+            --button-hover-bg: #0056b3;
+        }
+
+        .dark-theme {
+            --background-color: #121212;
+            --text-color: #fff;
+            --chat-bg: #1e1e1e;
+            --bot-bg: #2d2d2d;
+            --user-bg: #4a4a4a;
+            --button-bg: #1a73e8;
+            --button-hover-bg: #135ab8;
+        }
+
+        .container {
+            display: flex;
+            width: 90%;
+            height: 90%;
+            max-width: 1200px;
+            background: var(--chat-bg);
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .chats-panel {
+            width: 250px;
+            background: var(--background-color);
+            border-right: 1px solid #ccc;
+            overflow-y: auto;
+        }
+
+        .chats-panel h2 {
+            margin: 0;
+            padding: 15px;
+            background: var(--button-bg);
+            color: #fff;
+            text-align: center;
+        }
+
+        .chat-history {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .chat-history:hover .actions {
+            display: block;
+        }
+
+        .chat-history .actions {
+            display: none;
+            position: absolute;
+            top: 0;
+            right: 5px;
+        }
+
+        .chat-history .actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-color);
+            margin-left: 5px;
+        }
+
+        .chat-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .chat-box {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .chat-message {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            max-width: 80%;
+        }
+
+        .chat-message.bot {
+            background: var(--bot-bg);
+            align-self: flex-start;
+        }
+
+        .chat-message.user {
+            background: var(--user-bg);
+            align-self: flex-end;
+        }
+
+        .input-container {
+            display: flex;
+            padding: 10px;
+            background: var(--background-color);
+        }
+
+        #user-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+            background: var(--chat-bg);
+            color: var(--text-color);
+        }
+
+        #send-button {
+            padding: 10px 15px;
+            margin-left: 10px;
+            background: var(--button-bg);
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        #send-button:hover {
+            background: var(--button-hover-bg);
+        }
+
+        .settings-dropdown {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+
+        .settings-button {
+            background: var(--button-bg);
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        .settings-button:hover {
+            background: var(--button-hover-bg);
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 45px;
+            right: 0;
+            background: var(--background-color);
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+        }
+
+        .dropdown-menu button {
+            background: none;
+            border: none;
+            padding: 10px 20px;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            color: var(--text-color);
+        }
+
+        .dropdown-menu button:hover {
+            background: #f0f0f0;
+        }
+
+        #new-chat-button {
+            background: var(--button-bg);
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 10px;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        #new-chat-button:hover {
+            background: var(--button-hover-bg);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="chats-panel">
+            <h2>Chats</h2>
+            <button id="new-chat-button">New Chat</button>
+            <div id="chats-list"></div>
+        </div>
+        <div class="chat-container">
+            <div id="chat-box" class="chat-box">
+                <div class="chat-message bot">Hello! I am your chatbot. How can I help you today?</div>
+            </div>
+            <div class="input-container">
+                <input type="text" id="user-input" placeholder="Type your message here..." autocomplete="off">
+                <button id="send-button">Send</button>
+            </div>
+            <div class="settings-dropdown">
+                <button class="settings-button" id="settings-button">⚙️ Settings</button>
+                <div class="dropdown-menu" id="dropdown-menu">
+                    <button id="theme-toggler">Toggle Theme</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const setCookie = (name, value, days = 365) => {
+            const expires = new Date(Date.now() + days * 864e5).toUTCString();
+            document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/`;
+        };
+
+        const getCookie = (name) => {
+            return document.cookie.split('; ').reduce((r, v) => {
+                const [key, val] = v.split('=');
+                return key === name ? decodeURIComponent(val) : r;
+            }, '');
+        };
+
+        const chatBox = document.getElementById('chat-box');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+        const chatsList = document.getElementById('chats-list');
+        const settingsButton = document.getElementById('settings-button');
+        const dropdownMenu = document.getElementById('dropdown-menu');
+        const themeToggler = document.getElementById('theme-toggler');
+        const rootElement = document.documentElement;
+        const newChatButton = document.getElementById('new-chat-button');
+
+        let chatHistory = JSON.parse(getCookie('chatHistory') || '[]');
+        let currentChatIndex = chatHistory.length;
+
+        const jokes = [
+            "Why don’t skeletons fight each other? They don’t have the guts.",
+            "I told my wife she was drawing her eyebrows too high. She looked surprised.",
+            "Why don’t programmers like nature? It has too many bugs.",
+            "Parallel lines have so much in common. It’s a shame they’ll never meet.",
+					  "How do trees get on the Internet? They Log in!",
+			      "What do computers like to eat? Chips!",
+					  "What do you call a space magician? A flying saucerer!",
+					  "How do trees get off the Internet? They Leave!"
+        ];
+
+        const responses = {
+            hello: "Hi there! How can I assist you?",
+            help: "Sure, let me know what you need help with.",
+            joke: () => jokes[Math.floor(Math.random() * jokes.length)],
+            bye: "Goodbye! Have a great day!",
+					  hi: "Hello there! How can I assist you?",
+					  bro: "Unfortunately, I'm not your brother.",
+            default: "I'm sorry, I didn't understand that. Can you rephrase?"
+        };
+
+        const saveChats = () => setCookie('chatHistory', JSON.stringify(chatHistory));
+
+        const loadChatsList = () => {
+            chatsList.innerHTML = '';
+            chatHistory.forEach((chat, index) => {
+                const chatItem = document.createElement('div');
+                chatItem.className = 'chat-history';
+                chatItem.textContent = chat.name || `Chat ${index + 1}`;
+                chatItem.addEventListener('click', () => loadChat(index));
+
+                const actions = document.createElement('div');
+                actions.className = 'actions';
+
+                const renameButton = document.createElement('button');
+                renameButton.textContent = '✏️';
+                renameButton.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    renameChat(index);
+                });
+
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = '🗑️';
+                deleteButton.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    deleteChat(index);
+                });
+
+                actions.append(renameButton, deleteButton);
+                chatItem.appendChild(actions);
+                chatsList.appendChild(chatItem);
+            });
+        };
+
+        const loadChat = (index) => {
+            chatBox.innerHTML = '';
+            chatHistory[index].messages.forEach(({ text, sender }) => createMessage(text, sender));
+            currentChatIndex = index;
+        };
+
+        const renameChat = (index) => {
+            const newName = prompt('Enter a new name for this chat:', chatHistory[index].name || `Chat ${index + 1}`);
+            if (newName) {
+                chatHistory[index].name = newName;
+                saveChats();
+                loadChatsList();
+            }
+        };
+
+        const deleteChat = (index) => {
+            if (confirm('Are you sure you want to delete this chat?')) {
+                chatHistory.splice(index, 1);
+                saveChats();
+                loadChatsList();
+                if (currentChatIndex === index) {
+                    chatBox.innerHTML = '<div class="chat-message bot">Hello! I am your chatbot. How can I help you today?</div>';
+                    currentChatIndex = chatHistory.length;
+                }
+            }
+        };
+
+        const createMessage = (content, sender) => {
+            const message = document.createElement('div');
+            message.className = `chat-message ${sender}`;
+            message.textContent = content;
+            chatBox.appendChild(message);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        };
+
+        const handleInput = () => {
+            const userText = userInput.value.trim();
+            if (!userText) return;
+
+            createMessage(userText, 'user');
+            userInput.value = '';
+
+            const lowerText = userText.toLowerCase();
+            let botResponse = responses.default;
+
+            if (lowerText.includes('hello') || lowerText.includes('hi') || lowerText.includes('hey')) {
+                botResponse = responses.hello;
+            } else if (lowerText.includes('help')) {
+                botResponse = responses.help;
+            } else if (lowerText.includes('joke')) {
+                botResponse = responses.joke();
+            } else if (lowerText.includes('bye')) {
+                botResponse = responses.bye;
+					  } else if (lowerText.includes('bro')) {
+                botResponse = responses.bro;
+            }
+
+            setTimeout(() => createMessage(botResponse, 'bot'), 500);
+        };
+
+        sendButton.addEventListener('click', handleInput);
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleInput();
+        });
+
+        themeToggler.addEventListener('click', () => {
+            rootElement.classList.toggle('dark-theme');
+            const isDark = rootElement.classList.contains('dark-theme');
+            setCookie('theme', isDark ? 'dark' : 'light');
+        });
+
+        settingsButton.addEventListener('click', () => {
+            dropdownMenu.style.display = dropdownMenu.style.display === 'block' ? 'none' : 'block';
+        });
+
+        newChatButton.addEventListener('click', () => {
+            const newChat = {
+                name: `Chat ${chatHistory.length + 1}`,
+                messages: []
+            };
+            chatHistory.push(newChat);
+            currentChatIndex = chatHistory.length - 1;
+            saveChats();
+            loadChatsList();
+            loadChat(currentChatIndex);
+        });
+
+        const init = () => {
+            const savedTheme = getCookie('theme');
+            if (savedTheme === 'dark') rootElement.classList.add('dark-theme');
+            loadChatsList();
+        };
+
+        init();
+    </script>
+</body>
+</html>
