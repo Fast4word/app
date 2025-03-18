@@ -1,6 +1,7 @@
-body {
-  font-family: Arial, sans-serif;
-  background-color: #333;
+@import url('https://fonts.googleapis.com/css2?family=Doto:wght@100..900&family=Electrolize&display=swap');
+html {
+  font-family: Electrolize, Doto, Arial, sans-serif;
+  background-color: black;
   color: #fff;
   margin: 0;
   padding: 0;
