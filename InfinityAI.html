@@ -81,6 +81,7 @@
 					  bro: "Unfortunately, I'm not your brother.",
 					  thanks: "You are welcome! I'm here when you need to talk.",
 					  hobby: "I like responding to your queries, like I'm doing now!",
+					  your_code: "My code is super advanced. Press ctrl+u to see!",
             default: "I'm sorry, I didn't understand that. Can you rephrase?"
         };
 
@@ -175,7 +176,9 @@
 						} else if (lowerText.includes('thanks') || lowerText.includes('thank you')) {
 							  botResponse = responses.thanks;
             } else if (lowerText.includes('hobby') || lowerText.includes('hobbies')) {
-							  botResponse = responses.hobby;
+							  botResponse = responses.hobby; 
+						} else if (lowerText.includes('code')) {
+							  botResponse = responses.your_code;
 						}	
 					    
 
