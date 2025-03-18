@@ -1,0 +1,239 @@
+<link rel="stylesheet" href="styles.css"><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monster Catcher - Online Clicker Game By Fast4word</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Electrolize&display=swap');
+        
+        /* Base Styles */
+        body {
+            font-family: 'Electrolize', sans-serif;
+            background-color: #222;
+            color: #f0f0f0;
+            display: flex;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        /* Game Container */
+        #game-container {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+        }
+
+        /* Monster Image */
+        #monster-container {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: url('cursor.png'), auto;
+        }
+
+        #monster {
+            width: 200px;
+            transition: transform 0.2s;
+        }
+        
+        #monster:hover {
+            transform: scale(1.1);
+        }
+
+        /* Upgrades Sidebar */
+        #upgrades-panel {
+            flex: 1;
+            background: #333;
+            padding: 20px;
+            box-shadow: -2px 0px 5px rgba(0, 0, 0, 0.5);
+            overflow-y: auto;
+        }
+
+        #upgrades-panel h2 {
+            text-align: center;
+        }
+
+        .upgrade-item {
+            border-bottom: 1px solid #444;
+            padding: 10px 0;
+            text-align: left;
+        }
+
+        .upgrade-item button {
+            padding: 5px 10px;
+            background-color: #555;
+            color: #f0f0f0;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        /* Save Controls */
+        #save-controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: #444;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            width: 200px;
+        }
+
+        #save-controls button {
+            width: 90%;
+            margin: 5px 0;
+            padding: 8px;
+            background-color: #555;
+            color: #f0f0f0;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        #save-controls input {
+            width: 90%;
+            padding: 5px;
+            margin-top: 5px;
+            border-radius: 4px;
+            border: 1px solid #666;
+            background-color: #222;
+            color: #f0f0f0;
+        }
+    </style>
+	<link rel="stylesheet" href="core.css">
+</head>
+<body>
+    <audio id="background-music" loop autoplay>
+        <source src="background-music.mp3" type="audio/mpeg">
+    </audio>
+
+    <div id="game-container">
+        <!-- Monster Click Area -->
+        <div id="monster-container">
+            <h1>Monster Rancher Clicker</h1>
+            <p>Monsters Collected: <span id="monster-count">0</span></p>
+            <img src="monsterReal.png" id="monster" alt="Monster" onclick="clickMonster()">
+        </div>
+
+        <!-- Upgrades Panel -->
+        <div id="upgrades-panel">
+            <h2>Upgrades</h2>
+            <div id="upgrade-list"></div>
+        </div>
+    </div>
+
+    <!-- Save/Load Controls in Top-Left -->
+    <div id="save-controls">
+        <button onclick="saveProgress()">Generate Save Code</button>
+        <button onclick="loadProgress()">Load Save Code</button>
+        <input type="text" id="save-code" placeholder="Enter save code here">
+    </div>
+
+    <script>
+        let monsterCount = 0;
+        let clickPower = 1;
+        let autoClickPower = 0;
+        let upgrades = [
+            { name: "Rookie", cost: 10, power: 10, description: "Click power +10", type: "Click Power" },
+            { name: "Novice", cost: 50, power: 0, autoClick: 10, description: "Auto-click power +10", type: "Auto-Click" },
+            { name: "Apprentice", cost: 100, power: 50, description: "Click power +50", type: "Click Power" },
+            { name: "Master of Auto", cost: 200, power: 0, autoClick: 30, description: "Auto-click power +30", type: "Auto-Click" },
+            { name: "Adept", cost: 500, power: 100, description: "Click power +100", type: "Click Power" },
+            { name: "Elite", cost: 1000, power: 0, autoClick: 50, description: "Auto-click power +50", type: "Auto-Click" },
+            { name: "Champion", cost: 2500, power: 250, description: "Click power +250", type: "Click Power" },
+            { name: "Beast Tamer", cost: 5000, power: 0, autoClick: 100, description: "Auto-click power +100", type: "Auto-Click" },
+            { name: "Legend", cost: 10000, power: 500, description: "Click power +500", type: "Click Power" },
+            { name: "Fury", cost: 25000, power: 0, autoClick: 150, description: "Auto-click power +150", type: "Auto-Click" },
+            { name: "Monstrous Might", cost: 50000, power: 1000, description: "Click power +1000", type: "Click Power" },
+            { name: "Titan's Wrath", cost: 100000, power: 0, autoClick: 300, description: "Auto-click power +300", type: "Auto-Click" },
+            { name: "Savage", cost: 250000, power: 2500, description: "Click power +2500", type: "Click Power" },
+            { name: "Behemoth", cost: 500000, power: 0, autoClick: 500, description: "Auto-click power +500", type: "Auto-Click" },
+            { name: "Destroyer", cost: 1000000, power: 5000, description: "Click power +5000", type: "Click Power" },
+            { name: "God of the Wild", cost: 2500000, power: 0, autoClick: 1000, description: "Auto-click power +100", type: "Auto-Click" },
+            { name: "King", cost: 5000000, power: 10000, description: "Click power +10000", type: "Click Power" },
+            { name: "Overlord", cost: 10000000, power: 0, autoClick: 5000, description: "Auto-click power +5000", type: "Auto-Click" },
+            { name: "Supreme", cost: 25000000, power: 50000, description: "Click power +50000", type: "Click Power" },
+            { name: "Eternal", cost: 50000000, power: 0, autoClick: 10000, description: "Auto-click power +10000", type: "Auto-Click" },
+					  { name: "Ultimate Power", cost: 99999999999999999, power: 0, autoClick: 1000000000000000000000000000000000000000, description: "Grants an ancient power...", type: "Unknown" }
+        ];
+
+        function clickMonster() {
+            monsterCount += clickPower;
+            updateUI();
+        }
+
+        function buyUpgrade(index) {
+            const upgrade = upgrades[index];
+            if (monsterCount >= upgrade.cost) {
+                monsterCount -= upgrade.cost;
+                if (upgrade.power) {
+                    clickPower += upgrade.power;
+                } else if (upgrade.autoClick) {
+                    autoClickPower += upgrade.autoClick;
+                }
+                upgrade.cost = Math.floor(upgrade.cost * 1.5);
+                updateUI();
+            }
+        }
+
+        function updateUI() {
+            document.getElementById("monster-count").innerText = monsterCount;
+            const upgradeList = document.getElementById("upgrade-list");
+            upgradeList.innerHTML = "";
+            upgrades.forEach((upgrade, index) => {
+                const upgradeItem = document.createElement("div");
+                upgradeItem.classList.add("upgrade-item");
+                upgradeItem.innerHTML = `
+                    <strong>${upgrade.name}</strong> - ${upgrade.description}<br>
+                    Power: ${upgrade.power || upgrade.autoClick || 0}<br>
+                    Type: ${upgrade.type}<br>
+                    Cost: ${upgrade.cost} monsters<br>
+                    <button onclick="buyUpgrade(${index})">Buy</button>
+                `;
+                upgradeList.appendChild(upgradeItem);
+            });
+        }
+
+        function saveProgress() {
+            const saveData = {
+                monsterCount: monsterCount,
+                clickPower: clickPower,
+                autoClickPower: autoClickPower,
+                upgrades: upgrades
+            };
+            const saveCode = btoa(JSON.stringify(saveData));
+            document.getElementById("save-code").value = saveCode;
+            navigator.clipboard.writeText(saveCode).then(() => {
+                alert("Save code copied to clipboard!");
+            });
+        }
+
+        function loadProgress() {
+            try {
+                const saveCode = document.getElementById("save-code").value;
+                const saveData = JSON.parse(atob(saveCode));
+                monsterCount = saveData.monsterCount;
+                clickPower = saveData.clickPower;
+                autoClickPower = saveData.autoClickPower;
+                upgrades = saveData.upgrades;
+                updateUI();
+            } catch (error) {
+                alert("Invalid save code!");
+            }
+        }
+
+        setInterval(() => {
+            monsterCount += autoClickPower;
+            updateUI();
+        }, 1000);
+
+        updateUI();
+    </script>
+</body>
+</html>
